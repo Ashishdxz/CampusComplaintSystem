@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Complaint - Anonymous Campus Complaint System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <h1 class="logo">🏫 Campus Complaint System</h1>
+            <nav>
+                <a href="/" class="active">Submit Complaint</a>
+                <a href="/track">Track Status</a>
+                <a href="/login">Admin Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero-banner">
+            <h2>Speak Up Freely, Stay 100% Anonymous</h2>
+            <p>Report campus issues directly to the administration without fear. No names, student IDs, or contact information are collected.</p>
+            <div class="hero-actions">
+                <a href="/track" class="track-link-pill">🔍 Already submitted? Click here to track your complaint status</a>
+            </div>
+        </section>
+
+        <!-- Flash Messages for Errors / Notifications -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Complaint Submission Form Card -->
+        <section class="form-card">
+            <div class="form-header">
+                <h3>📝 New Complaint Form</h3>
+                <span class="badge privacy-badge">🔒 Fully Anonymous</span>
+            </div>
+
+            <form action="/submit" method="POST" id="complaintForm" novalidate>
+                <!-- 1. Complaint Title -->
+                <div class="form-group">
+                    <label for="title">Complaint Title <span class="required">*</span></label>
+                    <input 
+                        type="text" 
+                        id="title" 
+                        name="title" 
+                        placeholder="e.g. Wi-Fi disconnection in Library 2nd floor" 
+                        required 
+                        maxlength="150"
+                    >
+                    <small class="field-hint">A concise summary of the issue.</small>
+                </div>
+
+                <!-- 2. Category Dropdown -->
+                <div class="form-group">
+                    <label for="category">Category <span class="required">*</span></label>
+                    <select id="category" name="category" required>
+                        <option value="" disabled selected>-- Select a Category --</option>
+                        <option value="Academic">Academic (Lectures, Labs, Schedules)</option>
+                        <option value="Hostel">Hostel (Rooms, Mess, Water, Maintenance)</option>
+                        <option value="Infrastructure">Infrastructure (Classrooms, Benches, Washrooms)</option>
+                        <option value="Wi-Fi">Wi-Fi & Internet</option>
+                        <option value="Other">Other Issues</option>
+                    </select>
+                </div>
+
+                <!-- 3. Complaint Description -->
+                <div class="form-group">
+                    <label for="description">Detailed Description <span class="required">*</span></label>
+                    <textarea 
+                        id="description" 
+                        name="description" 
+                        rows="5" 
+                        placeholder="Describe the issue in detail. Include specific room numbers, building names, or timings so authorities can fix it quickly..." 
+                        required
+                    ></textarea>
+                    <small class="field-hint">Please do not include your personal name or phone number if you wish to remain anonymous.</small>
+                </div>
+
+                <!-- 4. Anonymous Submission Checkbox -->
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label" for="is_anonymous">
+                        <input type="checkbox" id="is_anonymous" name="is_anonymous" value="1" checked>
+                        <span><strong>Submit as Anonymous Complaint</strong> (Hide all personal identity)</span>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        Submit Complaint Anonymously 🚀
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; Anonymous Campus Complaint System. Built for student welfare.</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

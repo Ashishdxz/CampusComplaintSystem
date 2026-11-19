@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Anonymous Campus Complaint System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <h1 class="logo">🏫 Campus Complaint System <span class="badge admin-nav-badge">Admin Portal</span></h1>
+            <nav>
+                <a href="/">Submit Complaint</a>
+                <a href="/track">Track Status</a>
+                <a href="/logout" class="btn-logout-nav">🚪 Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container admin-container">
+        <!-- Dashboard Header -->
+        <section class="dashboard-header">
+            <div>
+                <h2>Admin Complaint Dashboard</h2>
+                <p>Welcome, <strong>{{ session.get('admin_user', 'Admin') }}</strong>! Here is an overview of all campus complaints.</p>
+            </div>
+            <div>
+                <a href="/logout" class="btn btn-secondary">Sign Out</a>
+            </div>
+        </section>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Quick Summary Statistics -->
+        <section class="dashboard-stats">
+            <div class="stat-card">
+                <span class="stat-number">{{ total_count }}</span>
+                <span class="stat-label">Total Complaints</span>
+            </div>
+            <div class="stat-card stat-pending">
+                <span class="stat-number">{{ pending_count }}</span>
+                <span class="stat-label">Pending Review</span>
+            </div>
+            <div class="stat-card stat-progress">
+                <span class="stat-number">{{ in_progress_count }}</span>
+                <span class="stat-label">In Progress</span>
+            </div>
+            <div class="stat-card stat-resolved">
+                <span class="stat-number">{{ resolved_count }}</span>
+                <span class="stat-label">Resolved</span>
+            </div>
+        </section>
+
+        <!-- Complaints Table Card -->
+        <section class="form-card dashboard-card">
+            <div class="form-header">
+                <h3>📋 Recent Campus Complaints ({{ total_count }})</h3>
+                <span class="badge privacy-badge">🔒 Identities Protected</span>
+            </div>
+
+            {% if complaints %}
+                <div class="table-responsive">
+                    <table class="complaint-table">
+                        <thead>
+                            <tr>
+                                <th>Ref ID</th>
+                                <th>Category</th>
+                                <th>Title</th>
+                                <th>Submitted On</th>
+                                <th>Privacy Mode</th>
+                                <th>Status</th>
+                                <th>Update Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in complaints %}
+                                <tr>
+                                    <td>
+                                        <a href="/track?ref=CMP-{{ '%04d' % c.id }}" class="table-ref-link" title="Click to view details">
+                                            CMP-{{ '%04d' % c.id }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-category">{{ c.category }}</span>
+                                    </td>
+                                    <td class="table-title-cell">
+                                        <strong>{{ c.title }}</strong>
+                                        <div class="table-desc-preview">{{ c.description[:80] }}{% if c.description|length > 80 %}...{% endif %}</div>
+                                    </td>
+                                    <td class="table-date-cell">{{ c.created_at }}</td>
+                                    <td>
+                                        {% if c.is_anonymous %}
+                                            <span class="badge privacy-badge">🔒 Anonymous</span>
+                                        {% else %}
+                                            <span class="badge">Standard</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if c.status in ['Pending', 'Pending Review'] %}
+                                            <span class="badge status-pending">⏳ Pending</span>
+                                        {% elif c.status in ['In Progress', 'In Review'] %}
+                                            <span class="badge status-progress">🔧 In Progress</span>
+                                        {% elif c.status == 'Resolved' %}
+                                            <span class="badge status-resolved">✅ Resolved</span>
+                                        {% else %}
+                                            <span class="badge">{{ c.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form action="/admin/update-status" method="POST" class="status-update-form">
+                                            <input type="hidden" name="complaint_id" value="{{ c.id }}">
+                                            <select name="status" id="status-select-{{ c.id }}" class="status-select" aria-label="Change status">
+                                                <option value="Pending" {% if c.status in ['Pending', 'Pending Review'] %}selected{% endif %}>Pending</option>
+                                                <option value="In Progress" {% if c.status in ['In Progress', 'In Review'] %}selected{% endif %}>In Progress</option>
+                                                <option value="Resolved" {% if c.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                                            </select>
+                                            <button type="submit" class="btn-update-status" title="Save updated status">Update</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <p>🎉 No complaints found in the database. All clear!</p>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; Anonymous Campus Complaint System. Administrative Management Portal.</p>
+        </div>
+    </footer>
+</body>
+</html>

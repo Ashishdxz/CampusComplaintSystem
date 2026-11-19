@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Complaint - Anonymous Campus Complaint System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <h1 class="logo">🏫 Campus Complaint System</h1>
+            <nav>
+                <a href="/">Submit Complaint</a>
+                <a href="/track" class="active">Track Status</a>
+                <a href="/login">Admin Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Search Header -->
+        <section class="hero-banner">
+            <h2>Track Your Complaint Status</h2>
+            <p>Check the live progress of your anonymously submitted issue using your Reference ID.</p>
+        </section>
+
+        <!-- Search Box Card -->
+        <section class="form-card search-card">
+            <form action="/track" method="GET" class="search-form">
+                <div class="search-input-group">
+                    <label for="ref" class="visually-hidden">Complaint Reference ID</label>
+                    <input 
+                        type="text" 
+                        id="ref" 
+                        name="ref" 
+                        value="{{ ref_query }}" 
+                        placeholder="Enter Reference ID (e.g. CMP-0001 or 1)" 
+                        required
+                        autofocus
+                    >
+                    <button type="submit" class="btn btn-primary btn-search">Track Status 🔍</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Error Alert if ID not found -->
+        {% if error_message %}
+            <div class="alert alert-error tracking-alert">
+                <span class="alert-icon">⚠️</span>
+                <div>
+                    <strong>Not Found:</strong> {{ error_message }}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Complaint Details Result Card -->
+        {% if complaint %}
+            <section class="tracking-result-card">
+                <div class="tracking-header">
+                    <div>
+                        <span class="tracking-ref-badge">{{ complaint.reference_id }}</span>
+                        <h3 class="tracking-title">{{ complaint.title }}</h3>
+                    </div>
+                    <div class="tracking-status-box">
+                        {% if complaint.status in ['Pending', 'Pending Review'] %}
+                            <span class="badge status-pending">⏳ Pending Review</span>
+                        {% elif complaint.status == 'In Review' %}
+                            <span class="badge status-progress">🔍 In Review</span>
+                        {% elif complaint.status == 'In Progress' %}
+                            <span class="badge status-progress">🔧 In Progress</span>
+                        {% elif complaint.status == 'Resolved' %}
+                            <span class="badge status-resolved">✅ Resolved</span>
+                        {% else %}
+                            <span class="badge">{{ complaint.status }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Visual Progress Timeline -->
+                <div class="progress-tracker">
+                    <!-- Step 1: Submitted (Active when Pending; Completed when in review/resolved) -->
+                    <div class="step {% if complaint.status in ['In Progress', 'In Review', 'Resolved'] %}step-completed{% else %}step-active{% endif %}">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Submitted</div>
+                    </div>
+                    <div class="step-line {% if complaint.status in ['In Progress', 'In Review', 'Resolved'] %}line-completed{% endif %}"></div>
+
+                    <!-- Step 2: In Review (Active when In Progress or In Review; Completed when resolved) -->
+                    <div class="step {% if complaint.status == 'Resolved' %}step-completed{% elif complaint.status in ['In Progress', 'In Review'] %}step-active{% endif %}">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">In Review</div>
+                    </div>
+                    <div class="step-line {% if complaint.status == 'Resolved' %}line-completed{% endif %}"></div>
+
+                    <!-- Step 3: Resolved (Highlighted when status is Resolved) -->
+                    <div class="step {% if complaint.status == 'Resolved' %}step-completed{% endif %}">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Resolved</div>
+                    </div>
+                </div>
+
+                <!-- Complaint Information Grid -->
+                <div class="tracking-details-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Category:</span>
+                        <span class="detail-value badge badge-category">{{ complaint.category }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Submission Date & Time:</span>
+                        <span class="detail-value">{{ complaint.created_at }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Privacy Mode:</span>
+                        <span class="detail-value">🔒 100% Anonymous (No personal identity captured)</span>
+                    </div>
+                    <div class="detail-item detail-full">
+                        <span class="detail-label">Complaint Description:</span>
+                        <div class="detail-desc-box">
+                            {{ complaint.description }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tracking-actions">
+                    <a href="/track" class="btn btn-secondary">Search Another Complaint</a>
+                    <a href="/" class="btn btn-secondary">Submit New Complaint</a>
+                </div>
+            </section>
+        {% elif not error_message and not ref_query %}
+            <!-- Helpful Instructions Card for first time visitors -->
+            <section class="instructions-card">
+                <h4>💡 How Complaint Tracking Works</h4>
+                <ul>
+                    <li>When you submit a complaint, a unique Reference ID like <code>CMP-0001</code> is shown to you.</li>
+                    <li>Enter that Reference ID in the search bar above to see the status updates from campus administration.</li>
+                    <li>Because your submission is 100% anonymous, your identity is never exposed here.</li>
+                </ul>
+            </section>
+        {% endif %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; Anonymous Campus Complaint System. Built for student welfare.</p>
+        </div>
+    </footer>
+</body>
+</html>

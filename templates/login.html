@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Anonymous Campus Complaint System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <h1 class="logo">🏫 Campus Complaint System</h1>
+            <nav>
+                <a href="/">Submit Complaint</a>
+                <a href="/track">Track Status</a>
+                <a href="/login" class="active">Admin Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Hero Banner -->
+        <section class="hero-banner">
+            <h2>Administrator Portal</h2>
+            <p>Access the campus complaint management dashboard.</p>
+        </section>
+
+        <!-- Flash Messages (if any) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container login-card">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Login Form Card -->
+        <section class="form-card login-card">
+            <div class="form-header">
+                <h3>🔐 Admin Sign In</h3>
+                <span class="badge privacy-badge">Authorized Personnel</span>
+            </div>
+
+            <form action="/login" method="POST" id="loginForm">
+                <!-- Username Field -->
+                <div class="form-group">
+                    <label for="username">Username <span class="required">*</span></label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        placeholder="Enter admin username" 
+                        required 
+                        autocomplete="username"
+                        autofocus
+                    >
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-group">
+                    <label for="password">Password <span class="required">*</span></label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Enter admin password" 
+                        required 
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <!-- Login Button -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="loginBtn">
+                        Sign In to Dashboard ➔
+                    </button>
+                </div>
+
+                <!-- Link back to Home -->
+                <div class="login-footer">
+                    <a href="/">← Return to Homepage</a>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; Anonymous Campus Complaint System. Administrative Access.</p>
+        </div>
+    </footer>
+</body>
+</html>
