@@ -1,7 +1,15 @@
 import os
 import hmac
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from database import init_db, get_db_connection
+from database import (
+    init_db,
+    get_db_connection,
+    db_insert_complaint,
+    db_get_complaint_by_id,
+    db_get_all_complaints,
+    db_update_complaint_status,
+    is_supabase_enabled
+)
 
 def load_env():
     """Load configuration from a local .env file if it exists."""
@@ -55,18 +63,13 @@ def submit_complaint():
         flash("Please fill in all required fields (Title, Category, and Description).", "error")
         return redirect(url_for("home"))
 
-    # 3. Insert complaint record into SQLite database
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO complaints (title, category, description, is_anonymous, status)
-        VALUES (?, ?, ?, ?, 'Pending')
-    """, (title, category, description, is_anonymous))
-    conn.commit()
-
-    # Get the auto-incremented primary key of the new complaint
-    complaint_id = cursor.lastrowid
-    conn.close()
+    # 3. Insert complaint record into database (Supabase or SQLite fallback)
+    try:
+        complaint_id = db_insert_complaint(title, category, description, is_anonymous)
+    except Exception as e:
+        print(f"Error submitting complaint: {e}")
+        flash("We encountered an issue submitting your complaint. Please try again in a moment.", "error")
+        return redirect(url_for("home"))
 
     # 4. Generate a unique, student-friendly Reference ID (e.g. CMP-0001)
     reference_id = f"CMP-{complaint_id:04d}"
@@ -94,9 +97,12 @@ def track():
 
         if cleaned_id.isdigit():
             complaint_id = int(cleaned_id)
-            conn = get_db_connection()
-            row = conn.execute("SELECT * FROM complaints WHERE id = ?", (complaint_id,)).fetchone()
-            conn.close()
+            try:
+                row = db_get_complaint_by_id(complaint_id)
+            except Exception as e:
+                print(f"Error retrieving complaint #{complaint_id}: {e}")
+                error_message = "Unable to retrieve complaint details at this time. Please try again later."
+                row = None
 
             if row:
                 complaint = {
@@ -109,7 +115,7 @@ def track():
                     "created_at": row["created_at"],
                     "is_anonymous": row["is_anonymous"]
                 }
-            else:
+            elif not error_message:
                 error_message = f"No complaint found matching Reference ID '{ref_query.upper()}'. Please check your ID and try again."
         else:
             error_message = f"Invalid format '{ref_query}'. Reference ID should look like CMP-0001 or 1."
@@ -164,9 +170,12 @@ def admin_dashboard():
         flash("Access denied. Please log in to view the Admin Dashboard.", "error")
         return redirect(url_for("login"))
 
-    conn = get_db_connection()
-    complaints = conn.execute("SELECT * FROM complaints ORDER BY id DESC").fetchall()
-    conn.close()
+    try:
+        complaints = db_get_all_complaints()
+    except Exception as e:
+        print(f"Error loading complaints for admin dashboard: {e}")
+        flash("Unable to load complaints from the database at this time. Please refresh or try again.", "error")
+        complaints = []
 
     # Calculate statistics
     total_count = len(complaints)
@@ -203,17 +212,16 @@ def update_status():
         flash("Invalid complaint ID.", "error")
         return redirect(url_for("admin_dashboard"))
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    row = cursor.execute("SELECT id FROM complaints WHERE id = ?", (int(complaint_id),)).fetchone()
-    if not row:
-        conn.close()
-        flash(f"Complaint ID #{complaint_id} not found.", "error")
+    try:
+        success = db_update_complaint_status(int(complaint_id), new_status)
+    except Exception as e:
+        print(f"Error updating status for complaint #{complaint_id}: {e}")
+        flash("An error occurred while updating the complaint status. Please try again.", "error")
         return redirect(url_for("admin_dashboard"))
 
-    cursor.execute("UPDATE complaints SET status = ? WHERE id = ?", (new_status, int(complaint_id)))
-    conn.commit()
-    conn.close()
+    if not success:
+        flash(f"Complaint ID #{complaint_id} not found.", "error")
+        return redirect(url_for("admin_dashboard"))
 
     flash(f"Complaint CMP-{int(complaint_id):04d} status updated to '{new_status}' successfully!", "success")
     return redirect(url_for("admin_dashboard"))
