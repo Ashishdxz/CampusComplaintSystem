@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Complaints - Campus Complaint System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <h1 class="logo">🏫 Campus Complaint System</h1>
+            <nav>
+                <a href="/">Submit Complaint</a>
+                <a href="/track">Track Status</a>
+                <a href="/my-complaints" class="active">My Complaints</a>
+                <a href="/profile">Profile</a>
+                <a href="/user/logout" class="btn-logout-nav">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Dashboard Header -->
+        <section class="dashboard-header user-dash-header">
+            <div>
+                <h2>My Submitted Complaints</h2>
+                <p>Welcome back, <strong>{{ current_user.name }}</strong> ({{ current_user.email }})</p>
+            </div>
+            <div class="header-actions">
+                <a href="/" class="btn btn-primary">+ Submit New Complaint</a>
+            </div>
+        </section>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Statistics Overview Cards -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_count }}</div>
+                <div class="stat-label">Total Submitted</div>
+            </div>
+            <div class="stat-card stat-pending">
+                <div class="stat-number">{{ pending_count }}</div>
+                <div class="stat-label">Pending Review</div>
+            </div>
+            <div class="stat-card stat-progress">
+                <div class="stat-number">{{ in_progress_count }}</div>
+                <div class="stat-label">In Progress</div>
+            </div>
+            <div class="stat-card stat-resolved">
+                <div class="stat-number">{{ resolved_count }}</div>
+                <div class="stat-label">Resolved</div>
+            </div>
+        </section>
+
+        <!-- Complaints Table Card -->
+        <section class="table-card">
+            <div class="table-header">
+                <h3>📋 Grievance History</h3>
+                <span class="table-subtext">Showing {{ complaints|length }} record(s)</span>
+            </div>
+
+            {% if complaints %}
+                <div class="table-responsive">
+                    <table class="complaints-table">
+                        <thead>
+                            <tr>
+                                <th>Ref ID</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Submitted On</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in complaints %}
+                                <tr>
+                                    <td>
+                                        <span class="tracking-ref-pill">CMP-{{ "%04d"|format(c.id) }}</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ c.title }}</strong>
+                                        {% if c.description %}
+                                            <div class="complaint-desc-preview">{{ c.description[:120] }}{% if c.description|length > 120 %}...{% endif %}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-category">{{ c.category }}</span>
+                                    </td>
+                                    <td>
+                                        {% if c.status in ['Pending', 'Pending Review'] %}
+                                            <span class="badge status-pending">⏳ Pending Review</span>
+                                        {% elif c.status in ['In Progress', 'In Review'] %}
+                                            <span class="badge status-progress">🔧 In Progress</span>
+                                        {% elif c.status == 'Resolved' %}
+                                            <span class="badge status-resolved">✅ Resolved</span>
+                                        {% else %}
+                                            <span class="badge">{{ c.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="timestamp-cell">
+                                        {{ c.created_at }}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('track', ref=c.id) }}" class="btn btn-sm btn-outline">
+                                            Live Track 🔍
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state-box">
+                    <div class="empty-state-icon">📋</div>
+                    <h4>No complaints submitted yet</h4>
+                    <p>When you report a campus grievance while signed in, your complaint and live status will appear here.</p>
+                    <a href="/" class="btn btn-primary" style="margin-top: 1rem;">
+                        Submit Your First Complaint 🚀
+                    </a>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; Anonymous Campus Complaint System. Built for student welfare.</p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -13,7 +13,18 @@
             <nav>
                 <a href="/">Submit Complaint</a>
                 <a href="/track" class="active">Track Status</a>
-                <a href="/login">Admin Login</a>
+                {% if current_user %}
+                    <a href="/my-complaints">My Complaints</a>
+                    <a href="/profile">Profile</a>
+                    <a href="/user/logout" class="btn-logout-nav">Logout</a>
+                {% else %}
+                    <a href="/user-login">Student Login</a>
+                {% endif %}
+                {% if is_admin %}
+                    <a href="/admin">Admin Dashboard</a>
+                {% else %}
+                    <a href="/login" class="nav-admin-link">Admin Login</a>
+                {% endif %}
             </nav>
         </div>
     </header>
@@ -114,11 +125,9 @@
                         <span class="detail-label">Privacy Mode:</span>
                         <span class="detail-value">🔒 100% Anonymous (No personal identity captured)</span>
                     </div>
-                    <div class="detail-item detail-full">
-                        <span class="detail-label">Complaint Description:</span>
-                        <div class="detail-desc-box">
-                            {{ complaint.description }}
-                        </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Status Protection:</span>
+                        <span class="detail-value">🔒 Detailed description is protected for student privacy</span>
                     </div>
                 </div>
 

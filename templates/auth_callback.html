@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authenticating - Campus Complaint System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="callback-body">
+    <div class="callback-container">
+        <div class="auth-spinner"></div>
+        <h2>Verifying Campus Session...</h2>
+        <p id="callbackStatus">Please wait while your authentication is securely verified.</p>
+    </div>
+
+    <script>
+        (function() {
+            const statusEl = document.getElementById("callbackStatus");
+
+            // 1. Extract access_token from URL hash (#access_token=...)
+            let accessToken = null;
+            if (window.location.hash) {
+                const hash = window.location.hash.substring(1);
+                const params = new URLSearchParams(hash);
+                accessToken = params.get("access_token");
+                const errorDesc = params.get("error_description");
+                if (errorDesc) {
+                    statusEl.innerText = "Authentication error: " + errorDesc;
+                    setTimeout(function() { window.location.href = "/user-login"; }, 2500);
+                    return;
+                }
+            }
+
+            // Fallback to query parameters
+            if (!accessToken && window.location.search) {
+                const params = new URLSearchParams(window.location.search);
+                accessToken = params.get("access_token");
+            }
+
+            if (!accessToken) {
+                statusEl.innerText = "No session token received. Redirecting to login...";
+                setTimeout(function() { window.location.href = "/user-login"; }, 1500);
+                return;
+            }
+
+            statusEl.innerText = "Cryptographically verifying session with server...";
+
+            // 2. Transmit token to backend for server-side cryptographic verification
+            fetch("/auth/session", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({ access_token: accessToken })
+            })
+            .then(function(res) {
+                return res.json().then(function(data) {
+                    return { ok: res.ok, status: res.status, data: data };
+                });
+            })
+            .then(function(result) {
+                if (result.ok && result.data && result.data.success) {
+                    statusEl.innerText = "Session verified! Opening your portal...";
+                    window.location.href = result.data.redirect || "/";
+                } else {
+                    const err = (result.data && result.data.error) ? result.data.error : "Authentication verification failed.";
+                    statusEl.innerText = err + " Redirecting...";
+                    setTimeout(function() { window.location.href = "/user-login"; }, 2000);
+                }
+            })
+            .catch(function(err) {
+                statusEl.innerText = "Connection error. Redirecting to login...";
+                setTimeout(function() { window.location.href = "/user-login"; }, 2000);
+            });
+        })();
+    </script>
+</body>
+</html>

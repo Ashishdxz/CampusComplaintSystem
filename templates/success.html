@@ -13,7 +13,18 @@
             <nav>
                 <a href="/">Submit Complaint</a>
                 <a href="/track">Track Status</a>
-                <a href="/login">Admin Login</a>
+                {% if current_user %}
+                    <a href="/my-complaints">My Complaints</a>
+                    <a href="/profile">Profile</a>
+                    <a href="/user/logout" class="btn-logout-nav">Logout</a>
+                {% else %}
+                    <a href="/user-login">Student Login</a>
+                {% endif %}
+                {% if is_admin %}
+                    <a href="/admin">Admin Dashboard</a>
+                {% else %}
+                    <a href="/login" class="nav-admin-link">Admin Login</a>
+                {% endif %}
             </nav>
         </div>
     </header>

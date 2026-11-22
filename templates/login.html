@@ -11,9 +11,16 @@
         <div class="container">
             <h1 class="logo">🏫 Campus Complaint System</h1>
             <nav>
-                <a href="/">Submit Complaint</a>
-                <a href="/track">Track Status</a>
-                <a href="/login" class="active">Admin Login</a>
+                {% if current_user %}
+                    <a href="/">Submit Complaint</a>
+                    <a href="/track">Track Status</a>
+                    <a href="/my-complaints">My Complaints</a>
+                    <a href="/profile">Profile</a>
+                    <a href="/user/logout" class="btn-logout-nav">Logout</a>
+                {% else %}
+                    <a href="/user-login">Sign In</a>
+                {% endif %}
+                <a href="/login" class="active nav-admin-link">Admin Login</a>
             </nav>
         </div>
     </header>
@@ -80,8 +87,9 @@
                     </button>
                 </div>
 
-                <!-- Link back to Home -->
+                <!-- Link back to Home & Student Login -->
                 <div class="login-footer">
+                    <p>Are you a student? <a href="{{ url_for('user_login') }}">Student Portal & Login ➔</a></p>
                     <a href="/">← Return to Homepage</a>
                 </div>
             </form>
